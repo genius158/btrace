@@ -5,6 +5,9 @@ buildscript {
         google()
         mavenCentral()
         jcenter()
+        maven {
+            url uri('rhea-build/rhea-gradle-plugin/plugins')
+        }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:$agp_version"

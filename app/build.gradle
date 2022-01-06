@@ -63,3 +63,59 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }
+
+//project.task("preMinifyTask") {
+//    doFirst {
+//        inputs.files.each { f ->
+//            println 'preMinifyTask file ' + f
+//        }
+//        println 'preMinifyTask preMinifyTask'
+//    }
+//}
+
+def preMinifyTask2Provider = project.tasks.register("preMinifyTask2") { task ->
+    doFirst {
+        task.inputs.any { input ->
+            input.files.files.any { file ->
+                println 'preMinifyTask file ' + file
+
+            }
+        }
+        println 'preMinifyTask preMinifyTask'
+    }
+}
+
+project.afterEvaluate {
+    project.android.applicationVariants.all { variant ->
+        println("variant variant  " + variant.mappingFile + "  " + variant.buildType)
+
+        def minifyTask = "minify${variant.name.capitalize()}WithProguard"
+        try {
+            def taskPrivder = project.tasks.named(minifyTask)
+            preMinifyTask2Provider.configure { it.dependsOn(taskPrivder) }
+        } catch (Throwable e) {
+            e.printStackTrace()
+        }
+
+        def dexBuilderTaskName = "dexBuilder${variant.name.capitalize()}"
+
+        try {
+            def dexBuilderProvider = project.tasks.named(dexBuilderTaskName)
+            dexBuilderProvider.configure { task ->
+                println "dexBuilderProvider.configure "+task.mixedScopeClasses.files
+
+                //task.mixedScopeClasses.files
+
+                Task pmt = preMinifyTask2Provider.get()
+                task.dependsOn(pmt)
+
+                task.doFirst{
+                    println "dexBuilderProvider.configure "+task.mixedScopeClasses.files
+                }
+
+            }
+        } catch (Throwable ignore) {
+        }
+
+    }
+}
