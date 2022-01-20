@@ -1,3 +1,5 @@
+import org.gradle.work.InputChanges
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.bytedance.rhea-trace'
@@ -73,15 +75,17 @@ dependencies {
 //    }
 //}
 
-def preMinifyTask2Provider = project.tasks.register("preMinifyTask2") { task ->
+
+
+def testTraceTaskProvider = project.tasks.register("TestTraceTask" ) { task ->
     doFirst {
         task.inputs.any { input ->
             input.files.files.any { file ->
-                println 'preMinifyTask file ' + file
+                println 'TestTraceTask file ' + file
 
             }
         }
-        println 'preMinifyTask preMinifyTask'
+        println 'TestTraceTask TestTraceTask'
     }
 }
 
@@ -92,7 +96,7 @@ project.afterEvaluate {
         def minifyTask = "minify${variant.name.capitalize()}WithProguard"
         try {
             def taskPrivder = project.tasks.named(minifyTask)
-            preMinifyTask2Provider.configure { it.dependsOn(taskPrivder) }
+            testTraceTaskProvider.configure { it.dependsOn(taskPrivder) }
         } catch (Throwable e) {
             e.printStackTrace()
         }
@@ -102,15 +106,15 @@ project.afterEvaluate {
         try {
             def dexBuilderProvider = project.tasks.named(dexBuilderTaskName)
             dexBuilderProvider.configure { task ->
-                println "dexBuilderProvider.configure "+task.mixedScopeClasses.files
+                println "dexBuilderProvider.configure " + task.mixedScopeClasses.files
 
                 //task.mixedScopeClasses.files
 
-                Task pmt = preMinifyTask2Provider.get()
+                Task pmt = testTraceTaskProvider.get()
                 task.dependsOn(pmt)
 
-                task.doFirst{
-                    println "dexBuilderProvider.configure "+task.mixedScopeClasses.files
+                task.doFirst {
+                    println "dexBuilderProvider.configure " + task.mixedScopeClasses.files
                 }
 
             }
@@ -118,4 +122,9 @@ project.afterEvaluate {
         }
 
     }
+}
+
+project.afterEvaluate {
+    def taskPrivder = project.tasks.named("stripReleaseDebugSymbols")
+    println("taskPrivder  $taskPrivder")
 }

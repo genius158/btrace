@@ -60,10 +60,13 @@ object RheaTraceTasksManager {
                 action
             )
 
+        val testTask = project.tasks.register("TestPluginTask", TestPluginTask::class.java)
+
         val minifyTask = "minify${variantName.capitalize()}WithProguard"
         try {
             val taskProvider = project.tasks.named(minifyTask)
             traceTaskProvider.dependsOn(taskProvider)
+            testTask.dependsOn(taskProvider)
         } catch (e: Throwable) {
             e.printStackTrace()
         }
@@ -73,6 +76,7 @@ object RheaTraceTasksManager {
             val dexBuilderProvider = project.tasks.named(dexBuilderTaskName)
             dexBuilderProvider.configure { task: Task ->
                 traceTaskProvider.get().wired(task as DexArchiveBuilderTask)
+                task.dependsOn(testTask.get())
             }
         } catch (e: Throwable) {
             RheaLog.e(
